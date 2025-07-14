@@ -47,5 +47,5 @@ phases:
       # with the new, unique image tag we just pushed.
       # IMPORTANT: You must replace 'your-deployment-name' and 'your-container-name' with the actual names
       # from your Kubernetes deployment manifest (e.g., deployment.yaml).
-      - kubectl set image deployment/your-deployment-name your-container-name=$REPOSITORY_URL:$IMAGE_TAG
+      - kubectl set image deployment/server-grpc-deployment server-prd=$REPOSITORY_URL:$IMAGE_TAG
       - echo "Deployment triggered successfully!"
