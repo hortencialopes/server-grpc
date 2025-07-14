@@ -40,11 +40,11 @@ phases:
       # The post_build phase is for final steps, like pushing artifacts and deploying.
       - echo "Build completed on `date`"
       - echo "Pushing the Docker images to ECR..."
-      - docker push $REPOSITORY_URL:latest
+      
       - docker push $REPOSITORY_URL:$IMAGE_TAG
       - echo "Deploying the new image to EKS..."
       # This is the final step. We tell Kubernetes to update our application's deployment
       # with the new, unique image tag we just pushed.
-      
+
       - kubectl set image deployment/server-grpc-deployment server-grpc-container=$REPOSITORY_URL:$IMAGE_TAG
       - echo "Deployment triggered successfully!"
