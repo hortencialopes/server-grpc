@@ -2,7 +2,6 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
     commands:
       # The install phase is used to install dependencies.
       # We will download and install kubectl, the Kubernetes command-line tool.
