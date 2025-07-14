@@ -1,10 +1,14 @@
 version: 0.2
 
+env:
+  secrets-manager:
+    # This tells CodeBuild to fetch the secret named "dockerhub-credentials"
+    DOCKERHUB_USERNAME: "dockerhub-credentials:username"
+    DOCKERHUB_PASSWORD: "dockerhub-credentials:password"
+
 phases:
   install:
     commands:
-      # The install phase is used to install dependencies.
-      # We will download and install kubectl, the Kubernetes command-line tool.
       - echo "Installing kubectl..."
       - curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.28.5/2024-01-04/bin/linux/amd64/kubectl
       - chmod +x ./kubectl
@@ -12,19 +16,17 @@ phases:
 
   pre_build:
     commands:
-      # The pre_build phase is for commands to run before the build.
-      # Here, we log in to ECR and configure kubectl to connect to our EKS cluster.
+      - echo "Logging in to Docker Hub..."
+      - echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
+
       - echo "Configuring kubectl..."
-      # The CLUSTER_NAME and AWS_DEFAULT_REGION are environment variables passed from our Terraform CodeBuild project.
-      # This command uses the "eks:DescribeCluster" permission you just added.
       - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION
+
       - echo "Logging in to Amazon ECR..."
-      # The REPOSITORY_URL is also an environment variable from Terraform.
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
 
   build:
     commands:
-      # The build phase is where we build the application.
       - echo "Build started on `date`"
       - echo "Building the Docker image..."
       # We'll use two tags: 'latest' for easy reference, and the Git commit hash for unique versioning.
@@ -43,7 +45,6 @@ phases:
       - echo "Deploying the new image to EKS..."
       # This is the final step. We tell Kubernetes to update our application's deployment
       # with the new, unique image tag we just pushed.
-      # IMPORTANT: You must replace 'your-deployment-name' and 'your-container-name' with the actual names
-      # from your Kubernetes deployment manifest (e.g., deployment.yaml).
+      
       - kubectl set image deployment/server-grpc-deployment server-grpc-container=$REPOSITORY_URL:$IMAGE_TAG
       - echo "Deployment triggered successfully!"
